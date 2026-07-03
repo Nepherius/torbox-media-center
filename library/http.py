@@ -61,7 +61,7 @@ general_http_client = httpx.Client(
 )
 
 
-def requestWrapper(client: httpx.Client, method: str, url: str, use_cache: bool = True, **kwargs) -> httpx.Response:
+def requestWrapper(client: httpx.Client, method: str, url: str, use_cache: bool = True, allow_redirect_response: bool = False, **kwargs) -> httpx.Response:
     max_retries = 5
     backoff_factor = 1.5
     
@@ -81,6 +81,11 @@ def requestWrapper(client: httpx.Client, method: str, url: str, use_cache: bool 
     for attempt in range(max_retries):
         try:
             response = client.request(method, url, **kwargs)
+            if allow_redirect_response and 300 <= response.status_code < 400:
+                if cacheable and cache_key:
+                    _cache[cache_key] = (time.time(), response)
+                    logging.debug(f"Cached redirect response for {url}")
+                return response
             response.raise_for_status()
             
             if cacheable and cache_key:

@@ -78,6 +78,7 @@ sudo docker run -it -d --name=torbox-media-center --restart=always --init \
     -e TORBOX_API_KEY="$api_key" \
     -e MOUNT_METHOD="$run_as" \
     -e MOUNT_PATH="/torbox" \
+    -e ORGANIZATION_MODE="parsed" \
     anonymoussystems/torbox-media-center:latest
 
 clear

@@ -8,6 +8,7 @@ import time
 import sys
 import logging
 from functions.appFunctions import getAllUserDownloads
+from functions.organizationFunctions import organizedFusePath
 import threading
 from sys import platform
 
@@ -32,77 +33,36 @@ class VirtualFileSystem:
         self.file_map = self._build_file_map()
 
     def _build_structure(self):
-        if RAW_MODE:
-            structure = { '/': set() }
-            for f in self.files:
-                original_path = f.get("path")
-                if original_path:
-                    # Split the path into parts
-                    parts = original_path.split('/')
-                    current_path = '/'
-                    for part in parts[:-1]:  # Skip the filename
-                        if part not in structure.get(current_path, set()):
-                            structure.setdefault(current_path, set()).add(part)
-                            current_path = f"{current_path}{part}/"
-                            structure.setdefault(current_path, set())
-            # Ensure consistent ordering
-            for key in structure:
-                structure[key] = sorted([item for item in structure[key] if item is not None])
-            return structure
-        else:
-            structure = {
-                '/': ['movies', 'series'],
-                '/movies': set(),
-                '/series': set()
-            }
-        
-        
+        structure = {'/': set()}
+        if not RAW_MODE:
+            structure['/'].update(['movies', 'series'])
+            structure['/movies'] = set()
+            structure['/series'] = set()
+
         for f in self.files:
-            media_type = f.get('metadata_mediatype')
-            root_folder = f.get('metadata_rootfoldername')
-            
-            if media_type == 'movie':
-                path = f'/movies/{root_folder}'
-                structure['/movies'].add(root_folder)
-                
-                if path not in structure:
-                    structure[path] = set()
-                structure[path].add(f.get('metadata_filename'))
-                
-            elif media_type == 'series':
-                path = f'/series/{root_folder}'
-                structure['/series'].add(root_folder)
-                
-                if path not in structure:
-                    structure[path] = set()
-                structure[path].add(f.get('metadata_foldername'))
-                
-                season_path = f'{path}/{f.get("metadata_foldername")}'
-                if season_path not in structure:
-                    structure[season_path] = set()
-                structure[season_path].add(f.get('metadata_filename'))
-        
-        # consistent ordering
+            path = organizedFusePath(f)
+            if not path:
+                continue
+
+            parts = [part for part in path.split('/') if part]
+            current_path = '/'
+            for index, part in enumerate(parts):
+                structure.setdefault(current_path, set()).add(part)
+                if index < len(parts) - 1:
+                    current_path = '/' + '/'.join(parts[:index + 1])
+                    structure.setdefault(current_path, set())
+
         for key in structure:
             structure[key] = sorted([item for item in structure[key] if item is not None])
-            
+
         return structure
 
     def _build_file_map(self):
         file_map = {}
         for f in self.files:
-            if RAW_MODE:
-                original_path = f.get("path")
-                if original_path:
-                    path = f'/{original_path}'
-                    file_map[path] = f
-            else:
-                if f.get('metadata_mediatype') == 'movie':
-                    path = f'/movies/{f.get("metadata_rootfoldername")}/{f.get("metadata_filename")}'
-                    file_map[path] = f
-                else:  # series
-                    path = f'/series/{f.get("metadata_rootfoldername")}/{f.get("metadata_foldername")}/{f.get("metadata_filename")}'
-                    file_map[path] = f
+            path = organizedFusePath(f)
+            if path:
+                file_map[path] = f
 
         return file_map
 

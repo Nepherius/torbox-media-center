@@ -22,13 +22,14 @@ if not "%run_as%"=="fuse" if not "%run_as%"=="strm" (
 
 cls
 
-for /f "tokens=*" %%i in ('whoami') do set current_user=%%i
+set "current_user=%USERNAME%"
+set "default_storage_path=C:\Users\%current_user%\torbox-media-center"
 
-set /p storage_path="??? Where would you like the files to be stored ???"
-echo --- Default: C:\Users\%current_user%\torbox-media-center ---
+echo --- Default: %default_storage_path% ---
+set /p storage_path="??? Where would you like the files to be stored ??? "
 
 if "%storage_path%"=="" (
-    set storage_path=C:\Users\%current_user%\torbox-media-center
+    set "storage_path=%default_storage_path%"
 )
 
 cls
@@ -86,6 +87,7 @@ docker run -it -d --name=torbox-media-center --restart=always --init ^
     -e TORBOX_API_KEY="%api_key%" ^
     -e MOUNT_METHOD="%run_as%" ^
     -e MOUNT_PATH="/torbox" ^
+    -e ORGANIZATION_MODE="parsed" ^
     anonymoussystems/torbox-media-center:latest
 
 cls

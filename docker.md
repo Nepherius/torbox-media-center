@@ -16,6 +16,7 @@ docker run -it -d \
     -e TORBOX_API_KEY=<EDIT_THIS_KEY> \
     -e MOUNT_METHOD=strm \
     -e MOUNT_PATH=/torbox \
+    -e ORGANIZATION_MODE=parsed \
     anonymoussystems/torbox-media-center:latest
 ```
 
@@ -37,6 +38,7 @@ docker run -it -d \
     -e TORBOX_API_KEY=<EDIT_THIS_KEY> \
     -e MOUNT_METHOD=fuse \
     -e MOUNT_PATH=/torbox \
+    -e ORGANIZATION_MODE=parsed \
     anonymoussystems/torbox-media-center:latest
 ```
 
@@ -53,6 +55,7 @@ docker run -it -d \
     -e TORBOX_API_KEY=<EDIT_THIS_KEY> \
     -e MOUNT_METHOD=strm \
     -e MOUNT_PATH=/torbox \
+    -e ORGANIZATION_MODE=parsed \
     ghcr.io/torbox-app/torbox-media-center:latest
 ```
 ## Docker Run Command Changing Location Of Files On Local System (STRM)
@@ -68,6 +71,7 @@ docker run -it -d \
     -e TORBOX_API_KEY=<EDIT_THIS_KEY> \
     -e MOUNT_METHOD=strm \
     -e MOUNT_PATH=/torbox \
+    -e ORGANIZATION_MODE=parsed \
     anonymoussystems/torbox-media-center:latest
 ```
 
@@ -84,6 +88,7 @@ docker run -it -d \
     -e TORBOX_API_KEY=<EDIT_THIS_KEY> \
     -e MOUNT_METHOD=strm \
     -e MOUNT_PATH=/data \
+    -e ORGANIZATION_MODE=parsed \
     anonymoussystems/torbox-media-center:latest
 ```
 
@@ -100,5 +105,6 @@ docker run -it -d \
     -e TORBOX_API_KEY=<EDIT_THIS_KEY> \
     -e MOUNT_METHOD=strm \
     -e MOUNT_PATH=/torbox \
+    -e ORGANIZATION_MODE=parsed \
     anonymoussystems/torbox-media-center:main
 ```

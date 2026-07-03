@@ -90,11 +90,39 @@ To run this project you will need to add the following environment variables to 
 
 `MOUNT_PATH` The mounting path where all of your files will be accessible. If inside of Docker, this path needs to be accessible to other applications. If running locally without Docker, this path must be owned.
 
+`PUID` and `PGID` Optional Docker user and group IDs for generated folders and `.strm` files. Set these to the host user/group that should own the mounted output, for example `1000`.
+
 `MOUNT_REFRESH_TIME` How fast you would like your mount to look for new files. Must be either `slowest` for every 24 hours, `very_slow` for every 12 hours, `slow` for every 6 hours, `normal` for every 3 hours, `fast` for every 2 hours or `ultra_fast` for every 1 hour. The default is `normal` and is optional.
 
-`ENABLE_METADATA` This option allows you to enable scanning the metadata of your files. If this is enabled, TorBox will __attempt__ to find the correct metadata for your files in your TorBox account. This isn't perfect, so use with caution. If this option is `false` it skips scanning and places all of your video files in the `movies` folder. If it is enabled, TorBox will scan, and attempt to place your files into either the `movies` or `series` folders. Please also keep in mind that you will be subject to rate limiting of our search endpoint when using the metadata option. Seeing 429 errors will be common. Most of the time it is best to keep this option disabled unless you video player absolutely requires it. Also keep in mind, this unlocks the `instant` option, which can allow you to refresh every 6 minutes.
+`ORGANIZATION_MODE` Controls how files are arranged. Use `parsed` if you want movies and series organized without metadata API lookups. It uses filename hints such as title, year, season, and episode, and lays files out under `movies` or `series`. Use `metadata` to use the configured metadata provider, `raw` to preserve the original TorBox/WebDAV-style tree, or `simple` for the legacy behavior where all videos are placed under `movies`. If this is set, it takes precedence over `ENABLE_METADATA` and `RAW_MODE`.
 
-`RAW_MODE` This option determines whether you want the raw file structure (similar to what you would see with webdav). Setting this to `true` will present the files in the original structure. If this is enabled, the `ENABLE_METADATA` option is disabled.
+`METADATA_PROVIDER` Controls which metadata provider is used when `ORGANIZATION_MODE=metadata`. Must be either `torbox` or `tmdb`. The default is `torbox`.
+
+`TMDB_API_KEY` Your TMDB v3 API key. This is only required when `ORGANIZATION_MODE=metadata` and `METADATA_PROVIDER=tmdb`, unless you use `TMDB_ACCESS_TOKEN` instead.
+
+`TMDB_ACCESS_TOKEN` Your TMDB API Read Access Token. TMDB recommends Bearer token authentication, and this will be used instead of `TMDB_API_KEY` when both are set.
+
+`TMDB_LANGUAGE` The TMDB metadata language. The default is `en-US`.
+
+`TMDB_INCLUDE_ADULT` Whether TMDB searches should include adult results. The default is `false`.
+
+`METADATA_MAX_WORKERS` Limits how many metadata lookups can run in parallel when `ORGANIZATION_MODE=metadata`. The default is `4`, which is slower but friendlier to rate limits on large libraries.
+
+`ENABLE_METADATA` Legacy shortcut for metadata scanning. If `ORGANIZATION_MODE` is not set, setting this to `true` is the same as `ORGANIZATION_MODE=metadata`. TorBox will __attempt__ to find the correct metadata for your files in your TorBox account. This isn't perfect, so use with caution. Please also keep in mind that you will be subject to rate limiting of our search endpoint when using the metadata option. Seeing 429 errors will be common. Most of the time it is best to keep this option disabled unless your video player absolutely requires it.
+
+`RAW_MODE` Legacy shortcut for raw organization. If `ORGANIZATION_MODE` is not set, setting this to `true` is the same as `ORGANIZATION_MODE=raw`.
+
+To use TMDB metadata, set:
+
+```env
+ORGANIZATION_MODE=metadata
+METADATA_PROVIDER=tmdb
+TMDB_API_KEY=<EDIT_THIS_KEY>
+```
+
+TMDB lookups use [movie search](https://developer.themoviedb.org/reference/search-movie) and [TV search](https://developer.themoviedb.org/reference/search-tv). Authentication can use either a v3 API key or a [TMDB API Read Access Token](https://developer.themoviedb.org/docs/authentication-application).
+
+Metadata results are cached in the local TinyDB files and reused on restart when the file identity and metadata settings have not changed. This keeps large libraries from re-querying metadata providers for every file on every container restart.
 
 ## 🐳 Running on Docker with one command (recommended)
 
@@ -114,6 +142,7 @@ docker run -it -d \
     -e TORBOX_API_KEY=<EDIT_THIS_KEY> \
     -e MOUNT_METHOD=strm \
     -e MOUNT_PATH=/torbox \
+    -e ORGANIZATION_MODE=parsed \
     anonymoussystems/torbox-media-center:latest
 ```
 
@@ -133,6 +162,7 @@ services:
             - TORBOX_API_KEY=<EDIT_THIS_KEY>
             - MOUNT_METHOD=strm
             - MOUNT_PATH=/torbox
+            - ORGANIZATION_MODE=parsed
         image: anonymoussystems/torbox-media-center:latest
 ```
 
@@ -154,6 +184,7 @@ services:
             - TORBOX_API_KEY=<API_KEY>
             - MOUNT_METHOD=fuse
             - MOUNT_PATH=/torbox
+            - ORGANIZATION_MODE=parsed
         cap_add:
             - SYS_ADMIN
         security_opt:

@@ -4,6 +4,8 @@ from library.filesystem import MOUNT_METHOD, MOUNT_PATH
 from library.app import MOUNT_REFRESH_TIME
 from library.torbox import TORBOX_API_KEY
 from functions.databaseFunctions import getAllData, clearDatabase
+from functions.metadataCacheFunctions import buildMetadataCache
+from functions.permissionsFunctions import applyOwnershipToTree
 import logging
 import os
 import shutil
@@ -29,18 +31,26 @@ def initializeFolders():
         else:
             logging.debug(f"Creating folder {folder}...")
             os.makedirs(folder, exist_ok=True)
+        applyOwnershipToTree(folder)
 
 def getAllUserDownloadsFresh():
     all_downloads = []
     logging.info("Fetching all user downloads...")
     for download_type in DownloadType:
+        existing_downloads, success, detail = getAllData(download_type.value)
+        if not success:
+            logging.error(f"Error loading cached {download_type.value} metadata: {detail}")
+            existing_downloads = []
+        metadata_cache = buildMetadataCache(existing_downloads)
+        logging.debug(f"Loaded {len(metadata_cache)} cached metadata entries for {download_type.value}.")
+
         logging.debug(f"Clearing database for {download_type.value}...")
         success, detail = clearDatabase(download_type.value)
         if not success:
             logging.error(f"Error clearing {download_type.value} database: {detail}")
             continue
         logging.debug(f"Fetching {download_type.value} downloads...")
-        downloads, success, detail = getUserDownloads(download_type)
+        downloads, success, detail = getUserDownloads(download_type, metadata_cache)
         if not success:
             logging.error(f"Error fetching {download_type.value}: {detail}")
             continue
@@ -103,4 +113,3 @@ def getLatestVersion():
     except Exception as e:
         logging.error(f"Error fetching latest version: {e}")
         return None
-

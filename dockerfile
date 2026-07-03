@@ -12,16 +12,17 @@ RUN apt-get update && \
 
 # Architecture-specific installations
 ARG TARGETPLATFORM
-RUN echo "Building for $TARGETPLATFORM" && \
-    case "$TARGETPLATFORM" in \
+RUN target_platform="${TARGETPLATFORM:-linux/$(dpkg --print-architecture)}" && \
+    echo "Building for $target_platform" && \
+    case "$target_platform" in \
         "linux/amd64"|"linux/arm64") \
             pip install fuse-python \
             ;; \
-        "linux/arm/v7"|"linux/arm/v8") \
+        "linux/armhf"|"linux/arm/v7"|"linux/arm/v8") \
             pip install git+https://github.com/libfuse/python-fuse \
             ;; \
         *) \
-            echo "Unsupported platform: $TARGETPLATFORM" && exit 1 \
+            echo "Unsupported platform: $target_platform" && exit 1 \
             ;; \
     esac
 

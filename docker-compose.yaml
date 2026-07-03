@@ -11,6 +11,7 @@ services:
             - TORBOX_API_KEY=<input your api key>
             - MOUNT_METHOD=strm
             - MOUNT_PATH=/torbox
+            - ORGANIZATION_MODE=parsed
             - RAW_MODE=false
             - ENABLE_METADATA=false
             - MOUNT_REFRESH_TIME=slow

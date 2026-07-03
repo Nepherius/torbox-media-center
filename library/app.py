@@ -1,11 +1,47 @@
 import os
-from dotenv import load_dotenv
 from enum import Enum
+
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    def load_dotenv():
+        return False
 
 load_dotenv()
 
-SCAN_METADATA = os.getenv("ENABLE_METADATA", "false").lower() == "true"
-RAW_MODE = os.getenv("RAW_MODE", "false").lower() == "true"
+LEGACY_SCAN_METADATA = os.getenv("ENABLE_METADATA", "false").lower() == "true"
+LEGACY_RAW_MODE = os.getenv("RAW_MODE", "false").lower() == "true"
+
+class OrganizationModes(Enum):
+    simple = "simple"
+    parsed = "parsed"
+    metadata = "metadata"
+    raw = "raw"
+
+class MetadataProviders(Enum):
+    torbox = "torbox"
+    tmdb = "tmdb"
+
+organization_mode_env = os.getenv("ORGANIZATION_MODE", "").lower()
+if organization_mode_env:
+    assert organization_mode_env in [mode.value for mode in OrganizationModes], f"Invalid organization mode: {organization_mode_env}. Valid options are: {[mode.value for mode in OrganizationModes]}"
+    ORGANIZATION_MODE = organization_mode_env
+else:
+    if LEGACY_RAW_MODE:
+        ORGANIZATION_MODE = OrganizationModes.raw.value
+    elif LEGACY_SCAN_METADATA:
+        ORGANIZATION_MODE = OrganizationModes.metadata.value
+    else:
+        ORGANIZATION_MODE = OrganizationModes.simple.value
+
+RAW_MODE = ORGANIZATION_MODE == OrganizationModes.raw.value
+SCAN_METADATA = ORGANIZATION_MODE == OrganizationModes.metadata.value
+
+METADATA_PROVIDER = os.getenv("METADATA_PROVIDER", MetadataProviders.torbox.value).lower()
+assert METADATA_PROVIDER in [provider.value for provider in MetadataProviders], f"Invalid metadata provider: {METADATA_PROVIDER}. Valid options are: {[provider.value for provider in MetadataProviders]}"
+
+METADATA_MAX_WORKERS = int(os.getenv("METADATA_MAX_WORKERS", "4"))
+assert METADATA_MAX_WORKERS > 0, "METADATA_MAX_WORKERS must be greater than 0"
 
 class MountRefreshTimes(Enum):
     # times are shown in hours
@@ -24,11 +60,17 @@ assert MOUNT_REFRESH_TIME in [e.name for e in MountRefreshTimes], f"Invalid moun
 if MOUNT_REFRESH_TIME == "instant":
     print("!!! Instant mount refresh time may cause rate limiting issues with the API. Use with caution. !!!")
 
-if SCAN_METADATA and RAW_MODE:
-    SCAN_METADATA = False
-    print("!!! RAW_MODE IS NOT COMPATIBLE WITH METADATA SCANNING. Disabling metadata scanning. !!!")
+if organization_mode_env and (LEGACY_SCAN_METADATA or LEGACY_RAW_MODE):
+    print("!!! ORGANIZATION_MODE is set and will be used instead of ENABLE_METADATA/RAW_MODE. !!!")
+
+if SCAN_METADATA:
+    print(f"!!! Metadata scanning is enabled using {METADATA_PROVIDER}. This may slow down the processing of files. !!!")
+elif RAW_MODE:
+    print("!!! Raw organization mode is enabled. Files will use the original TorBox structure. !!!")
+elif ORGANIZATION_MODE == OrganizationModes.parsed.value:
+    print("!!! Parsed organization mode is enabled. Files will be organized from filename hints without metadata scanning. !!!")
 else:
-    print("!!! Metadata scanning is enabled. This may slow down the processing of files. !!!")
+    print("!!! Simple organization mode is enabled. Files will be placed under the movies folder without metadata scanning. !!!")
 
 if MOUNT_REFRESH_TIME == "instant" and SCAN_METADATA:
     print("!!! Using instant mount refresh time with metadata scanning may lead to excessive API calls. Falling back to 'fast' refresh time. !!!")
