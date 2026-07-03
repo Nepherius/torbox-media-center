@@ -43,6 +43,10 @@ assert METADATA_PROVIDER in [provider.value for provider in MetadataProviders], 
 METADATA_MAX_WORKERS = int(os.getenv("METADATA_MAX_WORKERS", "4"))
 assert METADATA_MAX_WORKERS > 0, "METADATA_MAX_WORKERS must be greater than 0"
 
+INCLUDE_SAMPLE_FILES = os.getenv("INCLUDE_SAMPLE_FILES", "false").lower() == "true"
+SAMPLE_FILE_MAX_BYTES = int(os.getenv("SAMPLE_FILE_MAX_BYTES", str(300 * 1024 * 1024)))
+assert SAMPLE_FILE_MAX_BYTES > 0, "SAMPLE_FILE_MAX_BYTES must be greater than 0"
+
 class MountRefreshTimes(Enum):
     # times are shown in hours
     slowest = 24 # 24 hours

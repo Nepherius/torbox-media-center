@@ -108,6 +108,10 @@ To run this project you will need to add the following environment variables to 
 
 `METADATA_MAX_WORKERS` Limits how many metadata lookups can run in parallel when `ORGANIZATION_MODE=metadata`. The default is `4`, which is slower but friendlier to rate limits on large libraries.
 
+`INCLUDE_SAMPLE_FILES` Controls whether release sample clips are mounted. The default is `false`, which skips obvious files like `sample.mkv`, `Sample2.mp4`, and files inside `Sample` folders so they do not get matched as random movies.
+
+`SAMPLE_FILE_MAX_BYTES` Maximum size used when deciding whether a filename containing a sample marker is a release sample. The default is `314572800` bytes, or 300 MiB.
+
 `ENABLE_METADATA` Legacy shortcut for metadata scanning. If `ORGANIZATION_MODE` is not set, setting this to `true` is the same as `ORGANIZATION_MODE=metadata`. TorBox will __attempt__ to find the correct metadata for your files in your TorBox account. This isn't perfect, so use with caution. Please also keep in mind that you will be subject to rate limiting of our search endpoint when using the metadata option. Seeing 429 errors will be common. Most of the time it is best to keep this option disabled unless your video player absolutely requires it.
 
 `RAW_MODE` Legacy shortcut for raw organization. If `ORGANIZATION_MODE` is not set, setting this to `true` is the same as `ORGANIZATION_MODE=raw`.

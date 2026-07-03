@@ -4,6 +4,7 @@ from enum import Enum
 import PTN
 from library.torbox import TORBOX_API_KEY
 from library.app import METADATA_MAX_WORKERS, METADATA_PROVIDER, SCAN_METADATA, ORGANIZATION_MODE, MetadataProviders, OrganizationModes
+from functions.fileFilterFunctions import isSampleFile
 from functions.mediaFunctions import constructSeriesTitle, cleanTitle, cleanYear
 from functions.metadataCacheFunctions import metadataCacheKeyFromRecord, metadataFields
 from functions.organizationFunctions import buildParsedMetadata, buildSimpleMetadata, formatTitleYear
@@ -35,6 +36,9 @@ def process_file(item, file, type, metadata_cache=None):
     mimetype = file.get("mimetype") or ""
     if not mimetype.startswith("video/") or mimetype not in ACCEPTABLE_MIME_TYPES:
         logging.debug(f"Skipping file {file.get('short_name')} with mimetype {mimetype}")
+        return None
+    if isSampleFile(file):
+        logging.debug(f"Skipping sample file {file.get('short_name')}")
         return None
     
     data = {
